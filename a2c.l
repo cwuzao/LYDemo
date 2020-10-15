@@ -1,41 +1,67 @@
 %{
     #include <stdio.h>
+    #include <stdarg.h>
+    #include <string> 
+    #define YYSTYPE std::string 
     #include "y.tab.h"
     void yyerror (char *s);
     int yylex();
+    int my_log(const char* format, ...);
 %}
 D           [0-9]
 L			[a-zA-Z_]
 H			[a-fA-F0-9]
 %%
-"MOV"       { printf("MOV "); return(MOV); }
-"MVN"       { printf("MVN "); return(MVN); }
-"MOVK"      { printf("MOVK "); return(MOVK); }
+"{L}+.apk:"  { return(APPNAME); }    
+"0000{H}+"  { return(ADDR); }    
 
-"LDUR"      { printf("LDUR "); return(LDUR); }
-"STUR"      { printf("STUR "); return(STUR); }
+"B.EQ"      { my_log("B.EQ "); yylval = yytext; return(BEQ); }
 
-"SUB"      { printf("SUB "); return(SUB); }
-"ADD"      { printf("ADD "); return(ADD); }
+"MOV"       { my_log("MOV "); yylval = yytext; return(MOV); }
+"MVN"       { my_log("MVN "); yylval = yytext; return(MVN); }
+"MOVK"      { my_log("MOVK "); yylval = yytext; return(MOVK); }
 
-"EOR"      { printf("EOR "); return(EOR); }
-"EON"      { printf("EON "); return(EON); }
-"ORR"      { printf("ORR "); return(ORR); }
-"ORN"      { printf("ORN "); return(ORN); }
-"BIC"      { printf("BIC "); return(BIC); }
+"LDUR"      { my_log("LDUR "); yylval = yytext; return(LDUR); }
+"STUR"      { my_log("STUR "); yylval = yytext; return(STUR); }
+
+"SUB"      { my_log("SUB "); yylval = yytext; return(SUB); }
+"ADD"      { my_log("ADD "); yylval = yytext; return(ADD); }
+
+"EOR"      { my_log("EOR "); yylval = yytext; return(EOR); }
+"EON"      { my_log("EON "); yylval = yytext; return(EON); }
+"ORR"      { my_log("ORR "); yylval = yytext; return(ORR); }
+"ORN"      { my_log("ORN "); yylval = yytext; return(ORN); }
+"BIC"      { my_log("BIC "); yylval = yytext; return(BIC); }
+"AND"      { my_log("AND "); yylval = yytext; return(AND); }
+
+"MADD"      { my_log("MADD "); yylval = yytext; return(MADD); }
 
 
-LSL#16      { printf("%s ",yytext); return(LSL16);}
+"LSL#16"      { my_log("%s ",yytext); yylval = yytext; return(LSL16);}
+"WZR"      { my_log("%s ",yytext); yylval = yytext; return(WZR);}
 
-#(0[xX]{H}+)  { printf("%s ",yytext); return(NUM); }
-#{D}+       { printf("%s ",yytext); return(NUM); }
+#0[xX]{H}+  { my_log("%s ",yytext); yylval = yytext; return(NUM); }
+#{D}+       { my_log("%s ",yytext); yylval = yytext; return(NUM); }
 
 
-[WX]{D}{D}?   { printf("%s ",yytext); return(REG); }
-[,]         { printf(", "); return(COMMA);}
-[\n]        { printf("lineend\n"); return(LINEEND); }
-.           { printf("*");/* none */}
+[WX]{D}{D}?   { my_log("%s ",yytext);  yylval = yytext; return(REG); }
+[,]         { my_log(", "); return(COMMA);}
+[=]         { my_log("= "); return(EQ);}
+[\n]        { my_log("\n"); return(LINEEND); }
+.           { /* none my_log("*"); */}
 %%
+
+int my_log(const char* format, ...)
+{
+    return -1;
+	int result;
+	
+    va_list vp;
+    va_start(vp, format);
+    result = vprintf(format, vp);
+    va_end(vp);
+    return result;
+}
 
 int yywrap(void)
 {
